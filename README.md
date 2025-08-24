@@ -1,5 +1,7 @@
 <div align="center">
 
+[English](README.md) | [简体中文](README_CN.md)
+
 # 🔔 Claude Code Reminder
 
 ### Let Claude Code call you when it needs you
