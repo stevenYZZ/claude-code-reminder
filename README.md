@@ -96,6 +96,84 @@ Imagine managing multiple Claude Code sessions:
 - ✅ **Zero Config** - Works out of the box
 - ✅ **Lightweight** - Minimal resource usage
 
+## 🛠️ Manual Configuration
+
+If you prefer to configure manually or the script doesn't work, follow these steps:
+
+### Step 1: Create the Hook Script
+
+Create a file `~/.claude/reminder.py` with this content:
+
+```python
+#!/usr/bin/env python
+# -*- coding: utf-8 -*-
+import json, sys, subprocess, os, locale
+
+# Windows encoding fix
+if sys.platform == 'win32':
+    sys.stdout.reconfigure(encoding='utf-8')
+    sys.stderr.reconfigure(encoding='utf-8')
+
+def main():
+    try:
+        data = json.load(sys.stdin)
+        if data.get("hook_event_name") == "Stop":
+            # Get project name
+            project = os.path.basename(os.getcwd()) or "Claude"
+            
+            # Detect language
+            lang = 'zh' if 'zh' in (locale.getdefaultlocale()[0] or '').lower() else 'en'
+            text = f"{project} 任务完成" if lang == 'zh' else f"{project} task completed"
+            
+            # Windows: Use SAPI
+            if sys.platform == 'win32':
+                ps_cmd = f'$v=New-Object -ComObject SAPI.SpVoice;$v.Rate=2;$v.Speak("{text}")'
+                subprocess.Popen(['powershell', '-Command', ps_cmd], 
+                               stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+            # macOS: Use say
+            elif sys.platform == 'darwin':
+                voice = 'Ting-Ting' if lang == 'zh' else 'Alex'
+                subprocess.Popen(['say', '-v', voice, text],
+                               stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+    except:
+        pass
+    sys.exit(0)
+
+if __name__ == "__main__":
+    main()
+```
+
+### Step 2: Update Claude Code Settings
+
+Edit `~/.claude/settings.json` and add this to the `hooks` section:
+
+```json
+{
+  "hooks": {
+    "Stop": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "python \"C:/Users/YOUR_USERNAME/.claude/reminder.py\"",
+            "timeout": 1
+          }
+        ]
+      }
+    ]
+  }
+}
+```
+
+**Note:** 
+- Replace `YOUR_USERNAME` with your actual username
+- On macOS/Linux, use `python3` instead of `python`
+- Use forward slashes `/` in the path, even on Windows
+
+### Step 3: Test
+
+Run any Claude Code command and wait for it to complete. You should hear the voice notification!
+
 ## 🗑️ Uninstallation
 
 ### Windows

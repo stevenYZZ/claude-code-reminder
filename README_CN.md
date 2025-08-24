@@ -96,21 +96,95 @@ curl -fsSL https://raw.githubusercontent.com/stevenYZZ/claude-code-reminder/mast
 - 💡 **超轻量** - 不影响 Claude Code 性能
 - 🆓 **完全开源** - 代码透明，放心使用
 
-## 🛠️ 高级配置
+## 🛠️ 手动配置教程
 
-### 自定义语音设置
+如果你更喜欢手动配置或脚本无法正常工作，请按以下步骤操作：
 
-工具会自动检测系统语言：
+### 步骤 1：创建 Hook 脚本
 
-- 🇨🇳 **中文系统** - 使用中文语音播报
-- 🇺🇸 **英文系统** - 使用英文语音播报
+创建文件 `~/.claude/reminder.py`（Windows 下为 `C:\Users\你的用户名\.claude\reminder.py`）：
 
-### 支持的事件
+```python
+#!/usr/bin/env python
+# -*- coding: utf-8 -*-
+import json, sys, subprocess, os, locale
 
-| 事件类型               | 触发时机               |
-| ---------------------- | ---------------------- |
-| **Notification** | Claude Code 发送通知时 |
-| **Stop**         | 任务完成或停止时       |
+# Windows 编码修复
+if sys.platform == 'win32':
+    sys.stdout.reconfigure(encoding='utf-8')
+    sys.stderr.reconfigure(encoding='utf-8')
+
+def main():
+    try:
+        data = json.load(sys.stdin)
+        if data.get("hook_event_name") == "Stop":
+            # 获取项目名
+            project = os.path.basename(os.getcwd()) or "Claude"
+            
+            # 检测语言
+            lang = 'zh' if 'zh' in (locale.getdefaultlocale()[0] or '').lower() else 'en'
+            text = f"{project} 任务完成" if lang == 'zh' else f"{project} task completed"
+            
+            # Windows: 使用 SAPI
+            if sys.platform == 'win32':
+                ps_cmd = f'$v=New-Object -ComObject SAPI.SpVoice;$v.Rate=2;$v.Speak("{text}")'
+                subprocess.Popen(['powershell', '-Command', ps_cmd], 
+                               stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+            # macOS: 使用 say
+            elif sys.platform == 'darwin':
+                voice = 'Ting-Ting' if lang == 'zh' else 'Alex'
+                subprocess.Popen(['say', '-v', voice, text],
+                               stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+    except:
+        pass
+    sys.exit(0)
+
+if __name__ == "__main__":
+    main()
+```
+
+### 步骤 2：更新 Claude Code 设置
+
+编辑 `~/.claude/settings.json`，在 `hooks` 部分添加以下配置：
+
+```json
+{
+  "hooks": {
+    "Stop": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "python \"C:/Users/你的用户名/.claude/reminder.py\"",
+            "timeout": 1
+          }
+        ]
+      }
+    ]
+  }
+}
+```
+
+**注意事项：**
+- 将 `你的用户名` 替换为你的实际 Windows 用户名
+- macOS/Linux 用户使用 `python3` 而不是 `python`
+- Windows 下路径也使用正斜杠 `/`
+- 确保 Python 已安装并可在命令行中使用
+
+### 步骤 3：测试
+
+运行任意 Claude Code 命令并等待完成，你应该能听到语音提醒！
+
+### 常见问题
+
+**Q: 没有听到声音怎么办？**
+- Windows：确保系统音量已开启，SAPI 服务正常
+- macOS：检查系统偏好设置中的语音功能
+- 检查 Python 是否正确安装：在命令行运行 `python --version`
+
+**Q: 如何自定义语音？**
+- 修改脚本中的 `Rate` 值调整语速（0-10，默认2）
+- macOS 可更换 `voice` 参数使用不同语音
 
 ## 🗑️ 卸载
 
