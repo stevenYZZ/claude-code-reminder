@@ -125,6 +125,13 @@ if __name__ == "__main__":
     Set-Content -Path $HOOK_FILE -Value $scriptContent -Encoding UTF8
 }
 
+# Backup existing settings.json if exists
+if (Test-Path $SETTINGS) {
+    $backupFile = "$SETTINGS.backup_$(Get-Date -Format 'yyyyMMdd_HHmmss')"
+    Copy-Item $SETTINGS $backupFile
+    Write-Host "✓ Backed up settings to: $backupFile" -ForegroundColor Green
+}
+
 # Update settings.json
 $settings = if (Test-Path $SETTINGS) { 
     Get-Content $SETTINGS -Raw | ConvertFrom-Json 

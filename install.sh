@@ -204,10 +204,18 @@ fi
 
 chmod +x "$HOOK_FILE"
 
+# Backup existing settings.json if exists
+if [ -f "$SETTINGS" ]; then
+    BACKUP_FILE="$SETTINGS.backup_$(date +%Y%m%d_%H%M%S)"
+    cp "$SETTINGS" "$BACKUP_FILE"
+    echo -e "${GREEN}✓ Backed up settings to: $BACKUP_FILE${NC}"
+fi
+
 # Update settings.json
 $PYTHON_CMD << EOF
 import json
 import os
+from datetime import datetime
 
 settings_path = "$SETTINGS"
 settings = {}
