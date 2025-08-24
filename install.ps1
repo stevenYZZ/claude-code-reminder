@@ -4,7 +4,7 @@ param([switch]$Uninstall)
 $CLAUDE_DIR = "$env:USERPROFILE\.claude"
 $HOOK_FILE = "$CLAUDE_DIR\overseer.py"
 $SETTINGS = "$CLAUDE_DIR\settings.json"
-$GITHUB_RAW = "https://raw.githubusercontent.com/yourusername/claude-code-reminder/main"
+$GITHUB_RAW = "https://raw.githubusercontent.com/stevenYZZ/claude-code-reminder/master"
 
 if ($Uninstall) {
     Write-Host "Uninstalling Claude Code Reminder..." -ForegroundColor Yellow

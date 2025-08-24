@@ -27,13 +27,13 @@ Now, Claude will tell you via voice:
 **Windows (PowerShell):**
 
 ```powershell
-iwr -useb https://raw.githubusercontent.com/yourusername/claude-code-reminder/main/install.ps1 | iex
+iwr -useb https://raw.githubusercontent.com/stevenYZZ/claude-code-reminder/master/install.ps1 | iex
 ```
 
 **macOS:**
 
 ```bash
-curl -fsSL https://raw.githubusercontent.com/yourusername/claude-code-reminder/main/install.sh | bash
+curl -fsSL https://raw.githubusercontent.com/stevenYZZ/claude-code-reminder/master/install.sh | bash
 ```
 
 ## How it works
