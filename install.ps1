@@ -8,6 +8,14 @@ $GITHUB_RAW = "https://raw.githubusercontent.com/stevenYZZ/claude-code-reminder/
 
 if ($Uninstall) {
     Write-Host "Uninstalling Claude Code Reminder..." -ForegroundColor Yellow
+    
+    # Backup settings before uninstall
+    if (Test-Path $SETTINGS) {
+        $backupFile = "$SETTINGS.uninstall_backup_$(Get-Date -Format 'yyyyMMdd_HHmmss')"
+        Copy-Item $SETTINGS $backupFile
+        Write-Host "✓ Backed up settings to: $backupFile" -ForegroundColor Green
+    }
+    
     if (Test-Path $HOOK_FILE) { 
         Remove-Item $HOOK_FILE -Force 
         Write-Host "✓ Hook script removed" -ForegroundColor Green
@@ -21,6 +29,7 @@ if ($Uninstall) {
         Write-Host "✓ Settings cleaned" -ForegroundColor Green
     }
     Write-Host "✓ Uninstall complete" -ForegroundColor Green
+    Write-Host "  Your settings backup is saved at: $backupFile" -ForegroundColor Gray
     exit
 }
 

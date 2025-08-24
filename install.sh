@@ -11,11 +11,20 @@ RED='\033[0;31m'
 GREEN='\033[0;32m'
 YELLOW='\033[1;33m'
 CYAN='\033[0;36m'
+GRAY='\033[0;90m'
 NC='\033[0m'
 
 # Uninstall
 if [[ "$1" == "--uninstall" ]] || [[ "$1" == "-u" ]]; then
     echo -e "${YELLOW}Uninstalling Claude Code Reminder...${NC}"
+    
+    # Backup settings before uninstall
+    if [ -f "$SETTINGS" ]; then
+        BACKUP_FILE="$SETTINGS.uninstall_backup_$(date +%Y%m%d_%H%M%S)"
+        cp "$SETTINGS" "$BACKUP_FILE"
+        echo -e "${GREEN}✓ Backed up settings to: $BACKUP_FILE${NC}"
+    fi
+    
     if [ -f "$HOOK_FILE" ]; then
         rm -f "$HOOK_FILE"
         echo -e "${GREEN}✓ Hook script removed${NC}"
@@ -38,6 +47,9 @@ except:
 "
     fi
     echo -e "${GREEN}✓ Uninstall complete${NC}"
+    if [ ! -z "$BACKUP_FILE" ]; then
+        echo -e "${GRAY}  Your settings backup is saved at: $BACKUP_FILE${NC}"
+    fi
     exit 0
 fi
 

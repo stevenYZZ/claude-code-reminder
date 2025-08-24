@@ -21,6 +21,7 @@
 如果你也同时开5个 Claude Code，一定懂这种痛苦：
 
 🔄 **每隔几分钟就要挨个检查：**
+
 ```
 终端1：还在跑吗？❌ 还在跑
 终端2：完成了吗？❌ 还在跑  
@@ -30,7 +31,7 @@
 
 ⏱️ **每天浪费在"切换查看"的时间 ≥ 30分钟**
 
-🤯 **结果就是：** Claude 在那闲着，你在这瞎找着  
+🤯 **结果就是：** Claude 在那闲着，你在这瞎找着
 
 ## ✨ 我的解决方案
 
@@ -57,6 +58,7 @@ curl -fsSL https://raw.githubusercontent.com/stevenYZZ/claude-code-reminder/mast
 ## 📖 实际效果
 
 之前的工作流程 😫：
+
 ```
 你：开5个终端同时跑任务
 你：切到终端1看看... 没完成
@@ -68,6 +70,7 @@ curl -fsSL https://raw.githubusercontent.com/stevenYZZ/claude-code-reminder/mast
 ```
 
 现在的工作流程 😎：
+
 ```
 你：开5个终端同时跑任务
 你：专心写其他代码
@@ -80,15 +83,10 @@ curl -fsSL https://raw.githubusercontent.com/stevenYZZ/claude-code-reminder/mast
 
 ## 🎯 谁需要这个工具？
 
-✅ **你是 Claude Code 多开党** - 同时跑3个以上终端  
-✅ **经常跑长任务** - 重构、测试、批量处理  
-✅ **多屏工作** - Claude 在副屏，经常忘记看  
-✅ **追求效率** - 不想浪费时间在切换查看上  
-
-📊 **实测数据：**
-- 任务响应速度提升 80%
-- Claude 空闲时间减少 90%  
-- 每天节省 30分钟+
+✅ **你是 Claude Code 多开党** - 同时跑3个以上终端
+✅ **经常跑长任务** - 重构、测试、批量处理
+✅ **多屏工作** - Claude 在副屏，经常忘记看
+✅ **追求效率** - 不想浪费时间在切换查看上
 
 ## ⚙️ 为什么选择这个？
 
@@ -103,24 +101,27 @@ curl -fsSL https://raw.githubusercontent.com/stevenYZZ/claude-code-reminder/mast
 ### 自定义语音设置
 
 工具会自动检测系统语言：
+
 - 🇨🇳 **中文系统** - 使用中文语音播报
 - 🇺🇸 **英文系统** - 使用英文语音播报
 
 ### 支持的事件
 
-| 事件类型 | 触发时机 |
-|---------|---------|
+| 事件类型               | 触发时机               |
+| ---------------------- | ---------------------- |
 | **Notification** | Claude Code 发送通知时 |
-| **Stop** | 任务完成或停止时 |
+| **Stop**         | 任务完成或停止时       |
 
 ## 🗑️ 卸载
 
 ### Windows
+
 ```powershell
 .\install.ps1 -Uninstall
 ```
 
 ### macOS
+
 ```bash
 ./install.sh --uninstall
 ```
