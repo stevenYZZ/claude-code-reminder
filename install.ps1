@@ -18,6 +18,7 @@ if ($Uninstall) {
         # Remove hooks
         $settings = Get-Content $SETTINGS -Raw | ConvertFrom-Json
         if ($settings.hooks.Stop) { $settings.hooks.PSObject.Properties.Remove("Stop") }
+        if ($settings.hooks.Notification) { $settings.hooks.PSObject.Properties.Remove("Notification") }
         
         # Save
         $settings | ConvertTo-Json -Depth 10 | Set-Content $SETTINGS
@@ -38,44 +39,16 @@ if (!(Test-Path $CLAUDE_DIR)) {
 
 Write-Host "Installing Claude Code Reminder..." -ForegroundColor Cyan
 
-# Create hook script
-$hookScript = @'
-#!/usr/bin/env python
-# -*- coding: utf-8 -*-
-import json, sys, subprocess, os, locale
-
-# Windows encoding fix
-if sys.platform == 'win32':
-    sys.stdout.reconfigure(encoding='utf-8')
-    sys.stderr.reconfigure(encoding='utf-8')
-
-def main():
-    try:
-        data = json.load(sys.stdin)
-        if data.get("hook_event_name") == "Stop":
-            # Get project name
-            project = os.path.basename(os.getcwd()) or "Claude"
-            
-            # Detect language
-            lang = 'zh' if 'zh' in (locale.getdefaultlocale()[0] or '').lower() else 'en'
-            text = f"{project} 任务完成" if lang == 'zh' else f"{project} task completed"
-            
-            # Speak
-            ps_cmd = f'$v=New-Object -ComObject SAPI.SpVoice;$v.Rate=2;$v.Speak("{text}")'
-            subprocess.Popen(['powershell', '-Command', ps_cmd], 
-                           stdout=subprocess.DEVNULL, 
-                           stderr=subprocess.DEVNULL)
-    except:
-        pass
-    sys.exit(0)
-
-if __name__ == "__main__":
-    main()
-'@
-
-# Save hook script
-$hookScript | Set-Content $HOOK_FILE
-Write-Host "✓ Created hook script" -ForegroundColor Green
+# Download hook script from GitHub
+try {
+    $scriptUrl = "https://raw.githubusercontent.com/stevenYZZ/claude-code-reminder/master/scripts/reminder_windows.py"
+    Invoke-WebRequest -Uri $scriptUrl -OutFile $HOOK_FILE -UseBasicParsing
+    Write-Host "✓ Downloaded hook script from GitHub" -ForegroundColor Green
+} catch {
+    Write-Host "Error: Failed to download script from GitHub" -ForegroundColor Red
+    Write-Host "Please check your internet connection" -ForegroundColor Yellow
+    exit 1
+}
 
 # Backup existing settings
 if (Test-Path $SETTINGS) {
@@ -96,7 +69,7 @@ if (-not $settings.PSObject.Properties["hooks"]) {
     Add-Member -InputObject $settings -NotePropertyName "hooks" -NotePropertyValue ([PSCustomObject]@{}) -Force
 }
 
-# Add Stop hook
+# Add Stop and Notification hooks
 $hookConfig = @(@{
     hooks = @(@{
         type = "command"
@@ -106,6 +79,7 @@ $hookConfig = @(@{
 })
 
 Add-Member -InputObject $settings.hooks -NotePropertyName "Stop" -NotePropertyValue $hookConfig -Force
+Add-Member -InputObject $settings.hooks -NotePropertyName "Notification" -NotePropertyValue $hookConfig -Force
 
 # Save settings  
 $settings | ConvertTo-Json -Depth 10 | Set-Content "$env:USERPROFILE\.claude\settings.json"

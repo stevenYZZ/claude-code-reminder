@@ -30,6 +30,7 @@ with open('$SETTINGS', 'r') as f:
     settings = json.load(f)
 if 'hooks' in settings:
     settings['hooks'].pop('Stop', None)
+    settings['hooks'].pop('Notification', None)
 with open('$SETTINGS', 'w') as f:
     json.dump(settings, f, indent=2)
 "
@@ -50,41 +51,22 @@ fi
 
 echo -e "${CYAN}Installing Claude Code Reminder...${NC}"
 
-# Create hook script
-cat > "$HOOK_FILE" << 'EOF'
-#!/usr/bin/env python3
-# -*- coding: utf-8 -*-
-import json, sys, subprocess, os, locale, platform
+# Download hook script from GitHub
+if [[ "$(uname)" == "Darwin" ]]; then
+    # macOS
+    SCRIPT_URL="https://raw.githubusercontent.com/stevenYZZ/claude-code-reminder/master/scripts/reminder_macos.py"
+else
+    # Linux
+    SCRIPT_URL="https://raw.githubusercontent.com/stevenYZZ/claude-code-reminder/master/scripts/reminder_linux.py"
+fi
 
-def main():
-    try:
-        data = json.load(sys.stdin)
-        if data.get("hook_event_name") == "Stop":
-            # Get project name
-            project = os.path.basename(os.getcwd()) or "Claude"
-            
-            # Detect language
-            lang = 'zh' if 'zh' in (locale.getdefaultlocale()[0] or '').lower() else 'en'
-            text = f"{project} 任务完成" if lang == 'zh' else f"{project} task completed"
-            
-            # Speak based on platform
-            system = platform.system()
-            if system == 'Darwin':  # macOS
-                voice = 'Ting-Ting' if lang == 'zh' else 'Alex'
-                subprocess.Popen(['say', '-v', voice, text],
-                               stdout=subprocess.DEVNULL,
-                               stderr=subprocess.DEVNULL)
-            elif system == 'Linux':
-                subprocess.Popen(['espeak', text],
-                               stdout=subprocess.DEVNULL,
-                               stderr=subprocess.DEVNULL)
-    except:
-        pass
-    sys.exit(0)
-
-if __name__ == "__main__":
-    main()
-EOF
+if curl -fsSL "$SCRIPT_URL" -o "$HOOK_FILE"; then
+    echo -e "${GREEN}✓ Downloaded hook script from GitHub${NC}"
+else
+    echo -e "${RED}Error: Failed to download script from GitHub${NC}"
+    echo -e "${YELLOW}Please check your internet connection${NC}"
+    exit 1
+fi
 
 chmod +x "$HOOK_FILE"
 echo -e "${GREEN}✓ Created hook script${NC}"
@@ -113,14 +95,17 @@ else:
 if 'hooks' not in settings:
     settings['hooks'] = {}
 
-# Add Stop hook
-settings['hooks']['Stop'] = [{
+# Add Stop and Notification hooks
+hookConfig = [{
     "hooks": [{
         "type": "command",
         "command": "python3 \"$HOOK_FILE\"",
         "timeout": 1
     }]
 }]
+
+settings['hooks']['Stop'] = hookConfig
+settings['hooks']['Notification'] = hookConfig
 
 with open(settings_path, 'w') as f:
     json.dump(settings, f, indent=2)
