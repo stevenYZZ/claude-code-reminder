@@ -2,169 +2,115 @@
 param([switch]$Uninstall)
 
 $CLAUDE_DIR = "$env:USERPROFILE\.claude"
-$HOOK_FILE = "$CLAUDE_DIR\overseer.py"
+$HOOK_FILE = "$CLAUDE_DIR\reminder.py"
 $SETTINGS = "$CLAUDE_DIR\settings.json"
-$GITHUB_RAW = "https://raw.githubusercontent.com/stevenYZZ/claude-code-reminder/master"
 
+# Uninstall
 if ($Uninstall) {
     Write-Host "Uninstalling Claude Code Reminder..." -ForegroundColor Yellow
     
-    # Backup settings before uninstall
+    # Backup before uninstall
     if (Test-Path $SETTINGS) {
         $backupFile = "$SETTINGS.uninstall_backup_$(Get-Date -Format 'yyyyMMdd_HHmmss')"
         Copy-Item $SETTINGS $backupFile
         Write-Host "✓ Backed up settings to: $backupFile" -ForegroundColor Green
+        
+        # Remove hooks
+        $settings = Get-Content $SETTINGS -Raw | ConvertFrom-Json
+        if ($settings.hooks.Stop) { $settings.hooks.PSObject.Properties.Remove("Stop") }
+        
+        # Save
+        $settings | ConvertTo-Json -Depth 10 | Set-Content $SETTINGS
     }
     
-    if (Test-Path $HOOK_FILE) { 
-        Remove-Item $HOOK_FILE -Force 
-        Write-Host "✓ Hook script removed" -ForegroundColor Green
-    }
-    # Clean settings.json
-    if (Test-Path $SETTINGS) {
-        $settings = Get-Content $SETTINGS -Raw | ConvertFrom-Json
-        if ($settings.hooks.Notification) { $settings.hooks.PSObject.Properties.Remove("Notification") }
-        if ($settings.hooks.Stop) { $settings.hooks.PSObject.Properties.Remove("Stop") }
-        $settings | ConvertTo-Json -Depth 10 | Out-File -FilePath $SETTINGS -Encoding UTF8 -Force
-        Write-Host "✓ Settings cleaned" -ForegroundColor Green
-    }
+    # Remove hook file
+    if (Test-Path $HOOK_FILE) { Remove-Item $HOOK_FILE -Force }
+    
     Write-Host "✓ Uninstall complete" -ForegroundColor Green
-    Write-Host "  Your settings backup is saved at: $backupFile" -ForegroundColor Gray
     exit
 }
 
 # Check Claude Code
 if (!(Test-Path $CLAUDE_DIR)) {
-    Write-Host "Error: Claude Code not found at $CLAUDE_DIR" -ForegroundColor Red
-    Write-Host "Please install Claude Code first: https://claude.ai/download" -ForegroundColor Yellow
+    Write-Host "Error: Claude Code not found" -ForegroundColor Red
     exit 1
 }
 
 Write-Host "Installing Claude Code Reminder..." -ForegroundColor Cyan
 
-# Download Windows version
-try {
-    $scriptUrl = "$GITHUB_RAW/scripts/overseer_windows.py"
-    Invoke-WebRequest -Uri $scriptUrl -OutFile $HOOK_FILE -ErrorAction Stop
-    Write-Host "✓ Downloaded overseer script" -ForegroundColor Green
-} catch {
-    # Fallback: embed the script
-    Write-Host "Using embedded script..." -ForegroundColor Yellow
-    $scriptContent = @'
+# Create hook script
+$hookScript = @'
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
-"""Claude Code Reminder for Windows"""
+import json, sys, subprocess, os, locale
 
-import json
-import sys
-import subprocess
-import os
-import locale
-
-# Windows编码修复
-sys.stdout.reconfigure(encoding='utf-8')
-sys.stderr.reconfigure(encoding='utf-8')
-os.environ['PYTHONIOENCODING'] = 'utf-8'
-
-def get_project_name():
-    try:
-        cwd = os.getcwd()
-        project = os.path.basename(cwd)
-        if not project or project in ['/', '\\', 'root', 'home']:
-            return "Claude"
-        return project
-    except:
-        return "Claude"
-
-def detect_language():
-    try:
-        lang = locale.getdefaultlocale()[0]
-        if lang and 'zh' in lang.lower():
-            return 'zh'
-        return 'en'
-    except:
-        return 'en'
-
-def speak(text, lang='zh'):
-    try:
-        rate = 2 if lang == 'zh' else 1
-        ps_cmd = f'''
-        $voice = New-Object -ComObject SAPI.SpVoice
-        $voice.Rate = {rate}
-        $voice.Speak("{text}", 1)
-        '''
-        cmd = f'start /b "" powershell -NoProfile -WindowStyle Hidden -Command "{ps_cmd}"'
-        subprocess.Popen(cmd, shell=True, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL, creationflags=0x08000000)
-    except:
-        pass
+# Windows encoding fix
+if sys.platform == 'win32':
+    sys.stdout.reconfigure(encoding='utf-8')
+    sys.stderr.reconfigure(encoding='utf-8')
 
 def main():
     try:
         data = json.load(sys.stdin)
-        event = data.get("hook_event_name", "")
-        
-        if event not in ["Notification", "Stop"]:
-            sys.exit(0)
-        
-        project = get_project_name()
-        lang = detect_language()
-        
-        if lang == 'zh':
-            messages = {
-                'Notification': f"{project} 等待确认",
-                'Stop': f"{project} 任务完成"
-            }
-        else:
-            messages = {
-                'Notification': f"{project} needs confirmation",
-                'Stop': f"{project} task completed"
-            }
-        
-        message = messages.get(event)
-        if message:
-            speak(message, lang)
+        if data.get("hook_event_name") == "Stop":
+            # Get project name
+            project = os.path.basename(os.getcwd()) or "Claude"
+            
+            # Detect language
+            lang = 'zh' if 'zh' in (locale.getdefaultlocale()[0] or '').lower() else 'en'
+            text = f"{project} 任务完成" if lang == 'zh' else f"{project} task completed"
+            
+            # Speak
+            ps_cmd = f'$v=New-Object -ComObject SAPI.SpVoice;$v.Rate=2;$v.Speak("{text}")'
+            subprocess.Popen(['powershell', '-Command', ps_cmd], 
+                           stdout=subprocess.DEVNULL, 
+                           stderr=subprocess.DEVNULL)
     except:
         pass
-    
     sys.exit(0)
 
 if __name__ == "__main__":
     main()
 '@
-    $scriptContent | Out-File -FilePath $HOOK_FILE -Encoding UTF8 -Force
-}
 
-# Backup existing settings.json if exists
+# Save hook script
+$hookScript | Set-Content $HOOK_FILE
+Write-Host "✓ Created hook script" -ForegroundColor Green
+
+# Backup existing settings
 if (Test-Path $SETTINGS) {
     $backupFile = "$SETTINGS.backup_$(Get-Date -Format 'yyyyMMdd_HHmmss')"
     Copy-Item $SETTINGS $backupFile
     Write-Host "✓ Backed up settings to: $backupFile" -ForegroundColor Green
 }
 
-# Update settings.json
+# Update settings
 $settings = if (Test-Path $SETTINGS) { 
     Get-Content $SETTINGS -Raw | ConvertFrom-Json 
 } else { 
-    @{ "`$schema" = "https://json.schemastore.org/claude-code-settings.json" }
+    [PSCustomObject]@{"$schema" = "https://json.schemastore.org/claude-code-settings.json"}
 }
 
-if (-not $settings.hooks) { 
-    $settings | Add-Member -NotePropertyName "hooks" -NotePropertyValue @{} -Force
+# Ensure hooks exist
+if (-not $settings.PSObject.Properties["hooks"]) {
+    Add-Member -InputObject $settings -NotePropertyName "hooks" -NotePropertyValue ([PSCustomObject]@{}) -Force
 }
 
-$hookCmd = "python `"$($HOOK_FILE.Replace('\', '/'))`""
-$hookConfig = @(@{hooks=@(@{type="command";command=$hookCmd;timeout=1})})
+# Add Stop hook
+$hookConfig = @(@{
+    hooks = @(@{
+        type = "command"
+        command = "python `"$($HOOK_FILE.Replace('\', '/'))`""
+        timeout = 1
+    })
+})
 
-$settings.hooks.Notification = $hookConfig
-$settings.hooks.Stop = $hookConfig
+Add-Member -InputObject $settings.hooks -NotePropertyName "Stop" -NotePropertyValue $hookConfig -Force
 
-$settings | ConvertTo-Json -Depth 10 | Out-File -FilePath $SETTINGS -Encoding UTF8 -Force
+# Save settings  
+$settings | ConvertTo-Json -Depth 10 | Set-Content "$env:USERPROFILE\.claude\settings.json"
 Write-Host "✓ Settings updated" -ForegroundColor Green
 
-# Test
 Write-Host "`n✅ Installation complete!" -ForegroundColor Green
-Write-Host "`nTesting voice notification..." -ForegroundColor Yellow
-echo '{"hook_event_name":"Stop"}' | python $HOOK_FILE
-Write-Host "You should hear 'Claude task completed'" -ForegroundColor Gray
-
-Write-Host "`nTo uninstall: .\install.ps1 -Uninstall" -ForegroundColor Cyan
+Write-Host "Claude Code will now announce when tasks complete." -ForegroundColor Cyan
+Write-Host "`nTo uninstall: .\install.ps1 -Uninstall" -ForegroundColor Gray
