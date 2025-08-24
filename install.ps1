@@ -70,19 +70,35 @@ if (-not $settings.PSObject.Properties["hooks"]) {
 }
 
 # Add Stop and Notification hooks
-$hookConfig = @(@{
-    hooks = @(@{
-        type = "command"
-        command = "python `"$($HOOK_FILE.Replace('\', '/'))`""
-        timeout = 1
-    })
-})
+$hookConfig = @(
+    @{
+        hooks = @(
+            @{
+                type = "command"
+                command = "python `"$HOOK_FILE`""
+                timeout = 1
+            }
+        )
+    }
+)
 
 Add-Member -InputObject $settings.hooks -NotePropertyName "Stop" -NotePropertyValue $hookConfig -Force
 Add-Member -InputObject $settings.hooks -NotePropertyName "Notification" -NotePropertyValue $hookConfig -Force
 
-# Save settings  
-$settings | ConvertTo-Json -Depth 10 | Set-Content "$env:USERPROFILE\.claude\settings.json"
+# Save settings with proper JSON formatting using Python
+$tempJson = $settings | ConvertTo-Json -Depth 10
+$tempFile = "$env:TEMP\claude_settings_temp.json"
+$tempJson | Out-File -FilePath $tempFile -Encoding UTF8
+
+python -c @"
+import json
+with open(r'$tempFile', 'r', encoding='utf-8-sig') as f:
+    data = json.load(f)
+with open(r'$env:USERPROFILE\.claude\settings.json', 'w', encoding='utf-8') as f:
+    json.dump(data, f, indent=2, ensure_ascii=False)
+"@
+
+Remove-Item $tempFile
 Write-Host "✓ Settings updated" -ForegroundColor Green
 
 Write-Host "`n✅ Installation complete!" -ForegroundColor Green
