@@ -1,6 +1,6 @@
 <div align="center">
 
-# 🔔 Claude Code Overseer
+# 🔔 Claude Code Reminder
 
 ### Let Claude Code call you when it needs you
 
@@ -24,7 +24,7 @@ When working with Claude Code across multiple projects, you might be:
 
 ## ✨ The Solution
 
-**Claude Code Overseer** gives your terminals a voice! Get instant audio notifications:
+**Claude Code Reminder** gives your terminals a voice! Get instant audio notifications:
 
 - 🎵 **"backend task completed"** - Know exactly which project is done
 - 🔊 **"frontend needs confirmation"** - Never miss a prompt again
