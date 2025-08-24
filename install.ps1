@@ -18,7 +18,8 @@ if ($Uninstall) {
         if ($settings.hooks.Notification) { $settings.hooks.PSObject.Properties.Remove("Notification") }
         if ($settings.hooks.Stop) { $settings.hooks.PSObject.Properties.Remove("Stop") }
         $jsonContent = $settings | ConvertTo-Json -Depth 10
-[System.IO.File]::WriteAllText($SETTINGS, $jsonContent, [System.Text.Encoding]::UTF8)
+$utf8NoBom = New-Object System.Text.UTF8Encoding $False
+[System.IO.File]::WriteAllText($SETTINGS, $jsonContent, $utf8NoBom)
         Write-Host "✓ Settings cleaned" -ForegroundColor Green
     }
     Write-Host "✓ Uninstall complete" -ForegroundColor Green
@@ -123,7 +124,8 @@ def main():
 if __name__ == "__main__":
     main()
 '@
-    [System.IO.File]::WriteAllText($HOOK_FILE, $scriptContent, [System.Text.Encoding]::UTF8)
+    $utf8NoBom = New-Object System.Text.UTF8Encoding $False
+    [System.IO.File]::WriteAllText($HOOK_FILE, $scriptContent, $utf8NoBom)
 }
 
 # Backup existing settings.json if exists
@@ -151,7 +153,8 @@ $settings.hooks.Notification = $hookConfig
 $settings.hooks.Stop = $hookConfig
 
 $jsonContent = $settings | ConvertTo-Json -Depth 10
-[System.IO.File]::WriteAllText($SETTINGS, $jsonContent, [System.Text.Encoding]::UTF8)
+$utf8NoBom = New-Object System.Text.UTF8Encoding $False
+[System.IO.File]::WriteAllText($SETTINGS, $jsonContent, $utf8NoBom)
 Write-Host "✓ Settings updated" -ForegroundColor Green
 
 # Test
