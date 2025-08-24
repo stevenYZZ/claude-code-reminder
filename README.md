@@ -34,24 +34,44 @@ Tab 4: Wait... finished 10 minutes ago 😭
 
 ## ✨ The Solution
 
-**Claude Code Reminder** gives your terminals a voice! Get instant audio notifications:
+**Claude Code Reminder** gives your terminals smart notifications! Choose your preferred style:
 
-- 🎵 **"backend task completed"** - Know exactly which project is done
-- 🔊 **"frontend needs confirmation"** - Never miss a prompt again
-- 🎯 **Custom messages** - Clear context for every notification
+### 🆕 System Notifications (Default)
+- 📱 **Native Windows 10/11 notifications** - Modern toast notifications with icons
+- 🎯 **Visual alerts** - See which project needs attention without interrupting your flow
+- 🔕 **Respects Do Not Disturb** - Follows your Windows notification settings
+
+### 🔊 Voice Notifications (Classic)
+- 🎵 **"backend task completed"** - Hear exactly which project is done
+- 🗣️ **Multi-language support** - Automatic Chinese/English detection
+- 🎯 **Audio alerts** - Perfect for when you're away from screen
 
 ## 🚀 Quick Start
 
 ### Windows Installation (PowerShell)
 
 ```powershell
+# Default: System notifications (Recommended)
 iwr -useb https://raw.githubusercontent.com/stevenYZZ/claude-code-reminder/master/install.ps1 | iex
+
+# Optional: Install with dependencies for best experience
+pip install plyer
 ```
 
 ### macOS Installation
 
 ```bash
 curl -fsSL https://raw.githubusercontent.com/stevenYZZ/claude-code-reminder/master/install.sh | bash
+```
+
+### Advanced Options
+
+```powershell
+# Use voice notifications instead
+.\install_notify.ps1 -Voice
+
+# Install with dependencies
+.\install_notify.ps1 -InstallDeps
 ```
 
 ## 📖 How It Works
@@ -90,11 +110,13 @@ Imagine managing multiple Claude Code sessions:
 
 ## ⚙️ Features
 
+- ✅ **Dual Notification Modes** - System notifications or voice alerts
 - ✅ **Automatic Detection** - Works with any Claude Code command
 - ✅ **Smart Context** - Includes working directory in notifications
 - ✅ **Cross-Platform** - Native support for Windows and macOS
 - ✅ **Zero Config** - Works out of the box
 - ✅ **Lightweight** - Minimal resource usage
+- ✅ **Fallback Support** - Automatically falls back if dependencies missing
 
 ## Manual Configuration
 
@@ -103,7 +125,8 @@ If the installation script doesn't work:
 ### Step 1: Copy Hook Script
 
 Copy the appropriate script from `scripts/` to `~/.claude/reminder.py`:
-- **Windows**: `scripts/reminder_windows.py`
+- **Windows (Notifications)**: `scripts/reminder_windows_notify.py` (Recommended)
+- **Windows (Voice)**: `scripts/reminder_windows.py`
 - **macOS**: `scripts/reminder_macos.py`  
 - **Linux**: `scripts/reminder_linux.py`
 
