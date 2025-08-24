@@ -18,11 +18,19 @@
 
 ## 🎯 The Problem
 
-When working with Claude Code across multiple projects, you might be:
+Running multiple Claude Code terminals? You know the pain:
 
-🖥️ **Coding on another screen** → Missing when Claude finishes  
-📁 **Managing multiple terminals** → Unsure which needs attention  
-☕ **Taking a break** → Missing important confirmation prompts  
+🔄 **The Endless Check Loop:**
+```
+Tab 1: Still running? ❌
+Tab 2: Done yet? ❌  
+Tab 3: Finally! ✅
+Tab 4: Wait... finished 10 minutes ago 😭
+```
+
+⏱️ **Daily time wasted switching between terminals: 30+ minutes**
+
+🤯 **The result:** Constant context switching, missed completions, and idle Claude instances  
 
 ## ✨ The Solution
 
