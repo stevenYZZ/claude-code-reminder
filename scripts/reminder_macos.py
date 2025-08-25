@@ -22,6 +22,21 @@ def get_project_name():
     except:
         return "Claude"
 
+def get_chinese_voice():
+    """Detect available Chinese voice"""
+    try:
+        result = subprocess.run(['say', '-v', '?'], capture_output=True, text=True)
+        voices = result.stdout.lower()
+        if 'tingting' in voices:
+            return 'Tingting'
+        elif 'ting-ting' in voices:
+            return 'Ting-Ting'
+        elif '丁丁' in voices or 'ding' in voices:
+            return '丁丁'
+    except:
+        pass
+    return None
+
 def detect_language():
     """Detect system language"""
     try:
@@ -37,19 +52,16 @@ def speak(text, lang='en'):
     try:
         # Choose voice based on language
         if lang == 'zh':
-            # Chinese voice (if available)
-            subprocess.Popen(
-                ['say', '-v', 'Ting-Ting', text],
-                stdout=subprocess.DEVNULL,
-                stderr=subprocess.DEVNULL
-            )
+            # Try to get available Chinese voice
+            chinese_voice = get_chinese_voice()
+            if chinese_voice:
+                subprocess.call(['say', '-v', chinese_voice, text])
+            else:
+                # Fallback to default voice
+                subprocess.call(['say', text])
         else:
             # English voice (female voice for consistency)
-            subprocess.Popen(
-                ['say', '-v', 'Samantha', text],
-                stdout=subprocess.DEVNULL,
-                stderr=subprocess.DEVNULL
-            )
+            subprocess.call(['say', '-v', 'Samantha', text])
     except:
         pass
 
