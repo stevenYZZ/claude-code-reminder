@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 """
-Claude Code Overseer for macOS
+Claude Code Reminder for macOS
 Voice notifications when Claude Code needs attention
 """
 
@@ -35,19 +35,21 @@ def detect_language():
 def speak(text, lang='en'):
     """macOS voice notification using say command"""
     try:
-        # Choose voice and rate based on language
+        # Choose voice based on language
         if lang == 'zh':
             # Chinese voice (if available)
-            voice_args = ['-v', 'Ting-Ting', '-r', '200']
+            subprocess.Popen(
+                ['say', '-v', 'Ting-Ting', text],
+                stdout=subprocess.DEVNULL,
+                stderr=subprocess.DEVNULL
+            )
         else:
-            # Default English voice
-            voice_args = ['-r', '200']
-        
-        subprocess.Popen(
-            ['say'] + voice_args + [text],
-            stdout=subprocess.DEVNULL,
-            stderr=subprocess.DEVNULL
-        )
+            # English voice (female voice for consistency)
+            subprocess.Popen(
+                ['say', '-v', 'Samantha', text],
+                stdout=subprocess.DEVNULL,
+                stderr=subprocess.DEVNULL
+            )
     except:
         pass
 
